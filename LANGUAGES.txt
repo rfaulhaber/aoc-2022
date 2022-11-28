@@ -1,0 +1,7 @@
+C
+Elixir
+Forth
+Haskell
+OCaml
+Prolog
+Racket

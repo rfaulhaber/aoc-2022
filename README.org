@@ -1,0 +1,12 @@
+#+title: Advent of Code 2022
+
+Same stuff, new year.
+
+Each directory corresponds to a day. My own personal rules:
+
+- Each program must ingest the input as a file
+- Each day must have a Nix flake associated with it
+- Each day is a randomly chosen language based on the content of [[file:LANGUAGES.txt][LANGUAGES.txt]]
+- No two days can use the same language
+- If Racket is chosen, and the input can be read as something language-like, it
+  must be implemented as a reader language
