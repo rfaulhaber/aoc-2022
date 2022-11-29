@@ -3,5 +3,5 @@ Elixir
 Forth
 Haskell
 OCaml
-Prolog
+WASM
 Racket
