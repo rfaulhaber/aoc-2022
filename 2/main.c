@@ -1,5 +1,8 @@
 #include "main.h"
 
+/* there is a memory leak in this program. I don't give a shit. Fuck C forever
+ * and ever amen */
+
 /* TODO generalize */
 char **get_lines(char *filename, size_t *length) {
   FILE *fp = fopen(filename, "r");
@@ -8,49 +11,42 @@ char **get_lines(char *filename, size_t *length) {
   ssize_t read;
 
   if (fp == NULL) {
-    printf("DEBUG >> could not read file");
     exit(1);
   }
 
-  printf("DEBUG >> read file");
+  char *c;
+  size_t lines_size = 0;
+  size_t nbytes;
 
-  char c;
-  for (c = getc(fp); c != EOF; c = getc(fp)) {
-    if (c == '\n') {
-      len++;
-    }
+  while ((nbytes = getline(&c, &lines_size, fp)) != -1) {
+    len++;
   }
 
-  char **lines = malloc(len * sizeof(char) * 4);
+  char **lines = malloc(len * sizeof(char *));
   size_t char_count = 0;
 
-  printf("lines: %d", len);
+  fclose(fp);
+  fp = fopen(filename, "r");
 
-  /* fp = fopen(filename, "r"); */
+  if (fp == NULL) {
+    exit(1);
+  }
 
-  /* if (fp == NULL) { */
-  /*   printf("DEBUG >> could not read file"); */
-  /*   exit(1); */
-  /* } */
+  size_t getline_len;
 
-  /* printf("DEBUG >> read file"); */
+  while ((read = getline(&line, &getline_len, fp)) != -1) {
+    lines[char_count] = strdup(line);
+    if (lines[char_count][getline_len - 1] == '\n') {
+      lines[char_count][getline_len - 1] = '\0';
+    }
 
-  /* while ((read = getline(&line, &len, fp)) != -1) { */
-  /*   size_t line_len = strlen(line); */
-  /*   char *line_cpy = strncpy(malloc(read), line, line_len + 1); */
+    char_count++;
+  }
 
-  /*   if (line_cpy[line_len - 1] == '\n') { */
-  /*     line_cpy[line_len - 1] = '\0'; */
-  /*   } */
+  free(line);
+  fclose(fp);
 
-  /*   lines[char_count] = line_cpy; */
-  /*   char_count++; */
-  /* } */
-
-  /* free(line); */
-  /* fclose(fp); */
-
-  *length = char_count;
+  *length = (size_t)len;
 
   return lines;
 }
@@ -137,33 +133,68 @@ int get_score_for_strat(Strategy strat) {
   return result + strat.right;
 }
 
+int part_2_get_other_strat(enum left_strat left, enum right_strat right) {
+  switch (right) {
+  case X:
+    switch (left) {
+    case A:
+      return C;
+    case B:
+      return A;
+    case C:
+      return B;
+    }
+  case Y:
+    return left;
+  case Z:
+    switch (left) {
+    case A:
+      return B;
+    case B:
+      return C;
+    case C:
+      return A;
+    }
+  }
+}
+
+int part_2_get_score_for_strat(Strategy strat) {
+  int other_strat = part_2_get_other_strat(strat.left, strat.right);
+  switch (strat.right) {
+  case X:
+    return LOSE + other_strat;
+  case Y:
+    return DRAW + other_strat;
+  case Z:
+    return WIN + other_strat;
+  }
+}
+
 int main(int argc, char *argv[]) {
   if (argc > 1) {
     char *path = argv[1];
     size_t filesize;
-    printf("got contents");
     char **contents = get_lines(path, &filesize);
 
-    /* for (int i = 0; i < filesize; i++) { */
-    /*   printf("line %d, %s", i, contents[i]); */
-    /* } */
+    Strategy *strategies = get_strategies(contents, filesize);
 
-    /* Strategy *strategies = get_strategies(contents, filesize); */
+    int part_1_score = 0;
+    int part_2_score = 0;
 
-    /* int part_1_score = 0; */
+    for (int i = 0; i < filesize; i++) {
+      Strategy strat = strategies[i];
+      int score = get_score_for_strat(strat);
+      part_1_score += score;
 
-    /* for (int i = 0; i < filesize; i++) { */
-    /*   Strategy strat = strategies[i]; */
-    /*   printf("left: %d, right: %d\n", strat.left, strat.right); */
-    /*   int score = get_score_for_strat(strat); */
-    /*   printf("outcome: %d\n", score); */
-    /*   part_1_score += score; */
-    /* } */
+      int score_2 = part_2_get_score_for_strat(strat);
+      part_2_score += score_2;
+    }
 
-    /* printf("part 1 score: %d\n", part_1_score); */
+    printf("part 1 score: %d\n", part_1_score);
+    printf("part 2 score: %d\n", part_2_score);
 
     free(contents);
-    /* free(strategies); */
+    free(strategies);
 
     return 0;
   }
