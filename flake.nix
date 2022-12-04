@@ -16,6 +16,21 @@
       in {
         devShells.default =
           pkgs.mkShell { buildInputs = haskellDeps ++ cdeps ++ racketDeps; };
+
+        templates = {
+          haskell = {
+            path = ./templates/haskell;
+            description = "AOC Haskell template";
+          };
+          c = {
+            path = ./templates/c;
+            description = "AOC C template";
+          };
+          racket = {
+            path = ./templates/racket;
+            description = "AOC Racket template";
+          };
+        };
       });
 
 }
