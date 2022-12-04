@@ -12,9 +12,10 @@
         pkgs = nixpkgs.legacyPackages.${system};
         haskellDeps = with pkgs; [ ghc haskellPackages.brittany cabal-install ];
         cdeps = with pkgs; [ clang gnumake lldb ];
+        racketDeps = with pkgs; [ racket ];
       in {
         devShells.default =
-          pkgs.mkShell { buildInputs = haskellDeps ++ cdeps; };
+          pkgs.mkShell { buildInputs = haskellDeps ++ cdeps ++ racketDeps; };
       });
 
 }
