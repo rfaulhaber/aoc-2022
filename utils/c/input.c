@@ -1,4 +1,6 @@
 #include "input.h"
+#include <stdio.h>
+#include <string.h>
 
 size_t get_line_count(char *path) {
   FILE *fp = fopen(path, "r");
