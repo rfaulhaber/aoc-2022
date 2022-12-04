@@ -32,3 +32,4 @@ cabal.project.local~
 .direnv
 
 *.out
+*.o
