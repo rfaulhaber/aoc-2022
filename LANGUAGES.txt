@@ -5,5 +5,5 @@ Forth
 Haskell
 OCaml
 Racket
-Ruby
 WASM
+Zig
