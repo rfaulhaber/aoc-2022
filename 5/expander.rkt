@@ -5,9 +5,8 @@
 (provide (rename-out [day5-module-begin #%module-begin])
          #%app
          #%datum
-         #%top
-         day5-state
-         day5-move)
+         state
+         move)
 
 (define-syntax (day5-module-begin stx)
   (syntax-case stx ()
@@ -17,8 +16,9 @@
 
 (define program-state '())
 
-(define (day5-state lst)
+(define (state lst)
+  (println "in expander")
   (set! program-state lst))
 
-(define (day5-move lst)
-  (println "~a" lst))
+(define (move lst)
+  (println "move!"))

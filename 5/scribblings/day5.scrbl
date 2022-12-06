@@ -1,10 +1,10 @@
 #lang scribble/manual
-@require[@for-label[|5|
+@require[@for-label[|day5|
                     racket/base]]
 
-@title{5}
+@title{day5}
 @author{ryan}
 
-@defmodule[|5|]
+@defmodule[|day5|]
 
 Package Description Here

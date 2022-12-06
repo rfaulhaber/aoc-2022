@@ -1,0 +1,20 @@
+#+title: day5
+
+This was an attempt to make a reader language from the day5 Advent of Code
+challenge. I did not succeed and I'm giving up.
+
+At the end of the day, if you try to evaluate this, you'll run into this error:
+
+#+begin_src
+module: cannot use identifier tainted by macro transformation
+#+end_src
+
+I have no idea what this means, and I can't find any information about it.
+
+Other issues I ran into:
+
+1. Evaluating a custom language programmatically is not straightforward at all,
+   and little guidance exists out there.
+2. Implementing a non-trivial reader language is not straightforward. I could
+   not figure out why Racket couldn't piece my modules together and evaluate the
+   identifiers provided in the expander.

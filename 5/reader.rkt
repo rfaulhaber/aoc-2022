@@ -1,4 +1,4 @@
-#lang racket/base
+#lang errortrace racket/base
 
 (require racket/port)
 (require racket/string)
@@ -21,12 +21,12 @@
          (input-split (string-split input "\n\n"))
          (top (car input-split))
          (bottom (cadr input-split)))
+    (displayln (format "read-code-from: ~s" (append (list (parse-stack-code top)) (parse-commands bottom))))
 
-    (display (append (list (parse-stack-code top)) (parse-commands bottom)))
     (append (list (parse-stack-code top)) (parse-commands bottom))))
 
 (define (parse-stack-code stack-string)
-  (let* ([lines (string-split stack-string "\n")]
+  (let* ([lines (drop (string-split stack-string "\n") 1)]
          [pos-line (last lines)]
          [stack-lines (take lines (- (length lines) 1))]
          [pos-list (regexp-match-positions* #px"[[:digit:]]" pos-line)]
@@ -39,7 +39,7 @@
                                (not (string=? el " "))) els))
                    (apply map list stacks))])
 
-    (list* 'day5-state (list out))))
+    `(state ,out)))
 
 (define (parse-commands commands)
   (let* ([lines (string-split commands "\n")]
@@ -47,7 +47,7 @@
            (map string->number (regexp-match* #px"[[:digit:]]" line))) lines)])
 
     (map (lambda (line)
-           `(day5-move ,@line)) command-lines)))
+           `(move ,@line)) command-lines)))
 
 (module+ test
   (require rackunit)
@@ -58,4 +58,4 @@
 
   (check-equal?
    (parse-commands "move 1 from 2 to 3\nmove 2 from 3 to 4")
-   '((day5-move 1 2 3) (day5-move 2 3 4))))
+   '((move 1 2 3) (move 2 3 4))))

@@ -1,4 +1,5 @@
 #lang info
+(define name "day5")
 (define collection "day5")
 (define deps '("base"))
 (define build-deps '("scribble-lib" "racket-doc" "rackunit-lib"))
