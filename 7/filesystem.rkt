@@ -56,7 +56,7 @@
           (set! current-dir (transform-cd (substring cmd 3) current-dir))
           (set! file-pairs (transform-ls (drop (string-split cmd "\n") 1) current-dir file-pairs))))
 
-    file-pairs))
+    (sort file-pairs string<? #:key car)))
 
 (module+ test
   (require rackunit)

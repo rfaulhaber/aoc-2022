@@ -24,36 +24,40 @@
   (set->list (list->set (map get-parent-dir dir-list))))
 
 (define (get-all-dirs filesystem)
-  (set->list (list->set (map get-parent-dir (map car filesystem)))))
-
-(define (resolve-subdirs dir-sizes-hash)
-  (let* ((dir-sizes dir-sizes-hash)
-         (files-list (sort (hash->list dir-sizes-hash) string<? #:key car))
-         (files-only (map car files-list)))
-
-    (for* ([dir files-only]
-           [subdir (find-all-subdirs dir files-only)])
-      (let ((dir-size 0))
-        (println (format "dir ~a, subdir: ~a" dir subdir))
-        (set! dir-size (+ dir-size (hash-ref dir-sizes subdir)))
-
-        (when (> dir-size 0)
-          (set! dir-sizes (hash-set dir-sizes dir (+ (hash-ref dir-sizes dir) dir-size))))))
-    dir-sizes))
+  (map get-parent-dir (map car filesystem)))
 
 (define (sum-dirs dir-sizes-hash dirs)
   (foldl + 0 (map (lambda (dir)
                     (hash-ref dir-sizes-hash dir)) dirs)))
 
+(define (sum-all-with-prefix dir filesystem)
+  (foldl + 0  (map cdr (filter (lambda (d)
+                                 (string-prefix? (car d) dir))
+                               filesystem))))
+
+(define (get-file-sizes filesystem)
+  (let* ((file-hash (make-hash filesystem))
+         (dirs (get-all-dirs filesystem))
+         (dir-sizes (hash)))
+
+    (for ([dir dirs])
+      (let* ([subdirs (find-all-subdirs dir dirs)])
+        (for ([subdir subdirs])
+          (set! dir-sizes (hash-set dir-sizes subdir (sum-all-with-prefix subdir filesystem))))))
+
+    (hash->list dir-sizes)))
+
 (define (solve-part1 filename)
   (let* ((filesystem (make-filesystem (file->string filename)))
-         (raw-file-sizes (get-raw-file-sizes filesystem))
-         (resolved-sizes (resolve-subdirs raw-file-sizes))
+         (file-sizes (get-file-sizes filesystem))
          (dirs-over (filter (lambda (el)
-                              (<= (cdr el) 100000)) (hash->list resolved-sizes))))
+                              (<= (cdr el) 100000)) file-sizes)))
 
-    ;; (for ([dir (hash->list resolved-sizes)])
-    ;;   (displayln (format "~a ~a" (car dir) (cdr dir))))
+    (for ([f file-sizes])
+      (println (format "f: ~a" f)))
+
+    (for ([f dirs-over])
+      (println (format "dir-over: ~a" f)))
 
     (foldl + 0 (map cdr dirs-over))))
 
@@ -96,4 +100,10 @@
                                  ("/quux/bar/quuz.txt" . 100)
                                  ))
                  string<?)
-                (sort '("/" "/foo" "/foo/bar" "/foo/bar/quuz" "/bar" "/bar/baz" "/quux/bar") string<?)))
+                (sort '("/" "/foo" "/foo/bar" "/foo/bar/quuz" "/bar" "/bar/baz" "/quux/bar") string<?))
+
+  (check-equal? (sum-all-with-prefix "/foo/bar" '(("/foo.txt" . 100)
+                                                  ("/foo/bar/baz" . 100)
+                                                  ("/foo/biz" . 100)))
+                100)
+  )
