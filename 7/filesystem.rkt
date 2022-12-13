@@ -1,4 +1,4 @@
-#lang errortrace racket
+#lang racket
 
 (require racket/string)
 (require racket/list)
@@ -6,7 +6,13 @@
 (provide make-filesystem
          get-parent-dir
          is-subdir?
-         get-parent-dirs)
+         get-parent-dirs
+         get-next-dir
+         find-all-subdirs
+         find-all-dirs
+         get-all-dirs
+         sum-all-with-prefix
+         get-file-sizes)
 
 (define (get-parent-dir path)
   (if (string=? path "/")
@@ -28,6 +34,34 @@
 
 (define (get-next-dir dir path)
   (string-join (append (string-split path "/") (list dir)) "/" #:before-first "/"))
+
+(define (find-all-subdirs path dir-list)
+  (filter (lambda (dir)
+            (is-subdir? dir path)) dir-list))
+
+(define (find-all-dirs dir-list)
+  (set->list (list->set (map get-parent-dir dir-list))))
+
+(define (get-all-dirs filesystem)
+  (let ((files (map car filesystem)))
+    (set->list (list->set (flatten (map get-parent-dirs files))))))
+
+(define (sum-all-with-prefix dir filesystem)
+  (foldl + 0  (map cdr (filter (lambda (d)
+                                 (string-prefix? (car d) dir))
+                               filesystem))))
+
+(define (get-file-sizes filesystem)
+  (let* ((file-hash (make-hash filesystem))
+         (dirs (get-all-dirs filesystem))
+         (dir-sizes (hash)))
+
+    (for ([dir dirs])
+      (let* ([subdirs (find-all-subdirs dir dirs)])
+        (for ([subdir subdirs])
+          (set! dir-sizes (hash-set dir-sizes subdir (sum-all-with-prefix subdir filesystem))))))
+
+    (hash->list dir-sizes)))
 
 (define (transform-cd dir current-dir)
   (cond
@@ -137,4 +171,29 @@
    (is-subdir? "/foo/bar/baz" "/foo/bar") #t)
 
   (check-equal?
-   (get-parent-dirs "/foo/bar/baz") '("/foo/bar" "/foo" "/")))
+   (get-parent-dirs "/foo/bar/baz") '("/foo/bar" "/foo" "/"))
+
+  (check-equal? (find-all-subdirs "/foo" '("/foo/bar" "/foo/baz" "/bar" "/bar/baz"))
+                '("/foo/bar" "/foo/baz"))
+
+  (check-equal? (sort
+                 (get-all-dirs '(("/foo.txt" . 100)
+                                 ("/bar.txt" . 200)
+                                 ("/foo/foo.txt" . 100)
+                                 ("/foo/bar.txt" . 100)
+                                 ("/foo/baz.txt" . 100)
+                                 ("/foo/bar/baz.txt" . 100)
+                                 ("/foo/bar/quux.txt" . 100)
+                                 ("/foo/bar/quuz/foo.txt" . 100)
+                                 ("/foo/bar/quuz/bar.txt" . 100)
+                                 ("/bar/baz.txt" . 100)
+                                 ("/bar/baz/quux.txt" . 100)
+                                 ("/quux/bar/quuz.txt" . 100)
+                                 ))
+                 string<?)
+                (sort '("/" "/foo" "/foo/bar" "/foo/bar/quuz" "/bar" "/bar/baz" "/quux/bar" "/quux") string<?))
+
+  (check-equal? (sum-all-with-prefix "/foo/bar" '(("/foo.txt" . 100)
+                                                  ("/foo/bar/baz" . 100)
+                                                  ("/foo/biz" . 100)))
+                100))
