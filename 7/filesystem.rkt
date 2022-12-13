@@ -14,9 +14,10 @@
       (string-join (drop-right (string-split path "/") 1) "/" #:before-first "/")))
 
 (define (is-subdir? candidate dir)
-  (if (string=? dir "/")
-      #t
-      (proper-subset? (list->set (string-split dir "/")) (list->set (string-split candidate "/")))))
+  (cond
+    [(string=? dir "/") #t]
+    [(string=? dir candidate) #f]
+    [else (string-prefix? candidate dir)]))
 
 (define (get-parent-dirs path)
   (let ((parent-dir (get-parent-dir path)))
@@ -74,6 +75,9 @@
    (get-parent-dir "/foo/bar") "/foo")
 
   (check-equal?
+   (get-parent-dir "/foo/bar/baz.bat") "/foo/bar")
+
+  (check-equal?
    (get-next-dir "foo" "/") "/foo")
 
   (check-equal?
@@ -87,6 +91,9 @@
 
   (check-equal?
    (transform-cd ".." "/foo/bar") "/foo")
+
+  (check-equal?
+   (transform-cd "/" "/foo/bar") "/")
 
   ;; - / (dir)
   ;;   - a (dir)
