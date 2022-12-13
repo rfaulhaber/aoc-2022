@@ -24,7 +24,8 @@
   (set->list (list->set (map get-parent-dir dir-list))))
 
 (define (get-all-dirs filesystem)
-  (map get-parent-dir (map car filesystem)))
+  (let ((files (map car filesystem)))
+    (set->list (list->set (flatten (map get-parent-dirs files))))))
 
 (define (sum-dirs dir-sizes-hash dirs)
   (foldl + 0 (map (lambda (dir)
@@ -53,22 +54,29 @@
          (dirs-over (filter (lambda (el)
                               (<= (cdr el) 100000)) file-sizes)))
 
-    (for ([f file-sizes])
-      (println (format "f: ~a" f)))
-
-    (for ([f dirs-over])
-      (println (format "dir-over: ~a" f)))
-
     (foldl + 0 (map cdr dirs-over))))
+
+(define (solve-part2 filename)
+  (let* ((filesystem (make-filesystem (file->string filename)))
+         (file-sizes (get-file-sizes filesystem))
+         (free-space (- 70000000 (cdr (assoc "/" file-sizes))))
+         (required-space (- 30000000 free-space))
+         (size-distances (sort (filter (lambda (el)
+                                         (>= (cdr el) required-space)) file-sizes)
+                               < #:key cdr))
+         (smallest-key (caar size-distances))
+         (result (cdr (assoc smallest-key file-sizes))))
+    result))
 
 (define (solve part filename)
   (case part
-    [(1) (solve-part1 filename)]))
+    [("1") (solve-part1 filename)]
+    [("2") (solve-part2 filename)]))
 
 (module+ main
   (require racket/cmdline)
 
-  (define part (make-parameter 1))
+  (define part (make-parameter "1"))
 
   (command-line
    #:program "day7"
@@ -100,10 +108,11 @@
                                  ("/quux/bar/quuz.txt" . 100)
                                  ))
                  string<?)
-                (sort '("/" "/foo" "/foo/bar" "/foo/bar/quuz" "/bar" "/bar/baz" "/quux/bar") string<?))
+                (sort '("/" "/foo" "/foo/bar" "/foo/bar/quuz" "/bar" "/bar/baz" "/quux/bar" "/quux") string<?))
 
   (check-equal? (sum-all-with-prefix "/foo/bar" '(("/foo.txt" . 100)
                                                   ("/foo/bar/baz" . 100)
                                                   ("/foo/biz" . 100)))
                 100)
-  )
+
+  (check-equal? (solve-part2 "sample.txt") 24933642))
