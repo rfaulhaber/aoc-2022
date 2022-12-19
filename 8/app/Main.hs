@@ -45,6 +45,12 @@ isEdge grid (x, y) =
   let (xmax, ymax) = getGridDimensions grid
   in  x == (xmax - 1) || y == (ymax - 1)
 
+
+isOutOfBounds :: Grid -> (Integer, Integer) -> Bool
+isOutOfBounds _ (x, y) | x < 0 || y < 0 = True
+isOutOfBounds grid (x, y) =
+  let (xmax, ymax) = getGridDimensions grid in x >= xmax || y >= ymax
+
 getAdjacentByDirection :: Grid -> Direction -> (Integer, Integer) -> Integer
 getAdjacentByDirection grid direction pos =
   getElement grid $ getPos direction pos
@@ -55,34 +61,38 @@ getPos Main.Down  (x, y) = (x, y + 1)
 getPos Main.Left  (x, y) = (x - 1, y)
 getPos Main.Right (x, y) = (x + 1, y)
 
+takeUntil :: (a -> Bool) -> [a] -> [a]
+takeUntil p = foldr (\x ys -> x : if p x then [] else ys) []
+
 getPathToEdge :: Grid -> Direction -> (Integer, Integer) -> [Integer]
 getPathToEdge grid direction pos =
-  map (getElement grid) . takeWhile (not . (isEdge grid)) $ iterate
+  map (getElement grid) . takeWhile (not . (isOutOfBounds grid)) $ iterate
     (getPos direction)
-    pos
-
--- isVisible :: Grid -> GridPos -> Bool
--- isVisible _ (0, _, _) = True
--- isVisible _ (_, 0, _) = True
--- isVisible grid (x, y, _)
---   | x
---     == fromIntegral (length (head grid))
---     -  1
---     || y
---     == fromIntegral (length grid)
---     -  1
---   = True
--- isVisible grid (x, y, p) =
---   let (back, top, right, down) = getAdjacent grid (x, y)
---   in  p > back && p > top && p > right && p > down
+    (getPos direction pos)
 
 isVisible :: Grid -> GridPos -> Bool
 isVisible grid (x, y, _) | isEdge grid (x, y) = True
 isVisible grid (x, y, p) =
+  let edgePaths = getEdgePathsForPoint grid (x, y, p)
+      visibleByRow =
+        map (foldl (&&) True) . map (\row -> map (\n -> p > n) row) $ edgePaths
+  in  any id visibleByRow
+
+getEdgePathsForPoint :: Grid -> GridPos -> [[Integer]]
+getEdgePathsForPoint grid (x, y, _) =
   let edgePathFns =
         map (getPathToEdge grid) $ [Main.Up, Main.Down, Main.Left, Main.Right]
-      edgePaths = map (\fn -> fn (x, y)) edgePathFns
-  in  foldl (\acc n -> acc && n) True edgePaths
+  in  map (\fn -> fn (x, y)) edgePathFns
+
+getViewingDistance :: Integer -> [Integer] -> Integer
+getViewingDistance _ [] = 0
+getViewingDistance p r  = fromIntegral . length . takeUntil (\n -> n <= p) $ r
+
+getScore :: Grid -> GridPos -> Integer
+getScore grid (x, y, p) =
+  let edgePaths = getEdgePathsForPoint grid (x, y, p)
+      res = fromIntegral . foldl (*) 1 . map (getViewingDistance p) $ edgePaths
+  in  trace ("res: " ++ show (x, y, p) ++ "score " ++ show res) res
 
 
 solvePart1 :: String -> Integer
@@ -94,7 +104,13 @@ solvePart1 input =
   in  fromIntegral . length . filter id . map (isVisible grid) $ elements
 
 solvePart2 :: String -> Integer
-solvePart2 = undefined
+solvePart2 input =
+  let grid         = getGrid input
+      (xmax, ymax) = getGridDimensions grid
+      indices      = [ (x, y) | x <- [0 .. xmax - 1], y <- [0 .. ymax - 1] ]
+      elements     = map (\(x, y) -> (x, y, getElement grid (x, y))) indices
+      scores       = map (getScore grid) elements
+  in  trace ("scores: " ++ show scores) foldl max 0 scores
 
 solvePart :: Integer -> String -> Integer
 solvePart part = if part == 1 then solvePart1 else solvePart2

@@ -10,7 +10,12 @@
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = nixpkgs.legacyPackages.${system};
-        haskellDeps = with pkgs; [ ghc haskellPackages.brittany cabal-install ];
+        haskellDeps = with pkgs; [
+          ghc
+          haskellPackages.brittany
+          haskellPackages.lsp
+          cabal-install
+        ];
         cdeps = with pkgs; [ clang gnumake lldb ];
         racketDeps = with pkgs; [ racket ];
       in {
