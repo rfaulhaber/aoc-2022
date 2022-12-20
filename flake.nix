@@ -13,7 +13,7 @@
         haskellDeps = with pkgs; [
           ghc
           haskellPackages.brittany
-          haskellPackages.lsp
+          haskellPackages.haskell-language-server
           cabal-install
         ];
         cdeps = with pkgs; [ clang gnumake lldb ];
