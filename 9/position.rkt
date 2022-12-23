@@ -21,7 +21,9 @@
     [(L) (struct-copy position pos (y (- (position-y pos) 1)))]))
 
 (define (motion-direction? direction)
-  (member direction '(U D R L)))
+  (case direction
+    [(U D R L) #t]
+    [else #f]))
 
 (define (is-adjacent? pos other)
   (<= (dist pos other) sqrt-2)) ;; close enough

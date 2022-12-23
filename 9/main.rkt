@@ -1,11 +1,12 @@
 #lang errortrace racket/base
 
 (require racket/file)
-(require racket/string)
 (require racket/list)
+(require racket/string)
 
 (require "./position.rkt")
 (require "./rope.rkt")
+(require "./chain.rkt")
 
 (define (parse-file filename)
   (map (lambda (line)
@@ -14,18 +15,40 @@
        (file->lines filename)))
 
 (define (solve-part-1 filename)
-  (println (format "hello ~a" (parse-file filename))))
+  (let ([contents (parse-file filename)]
+        [r (rope (position 0 0) (position 0 0))])
+    (length
+     (remove-duplicates
+      (flatten
+       (for/list ([instruction contents])
+         (let ([tails '()])
+           (for ([i (cdr instruction)])
+             (set! r (apply-motion-to-rope r (car instruction)))
+             (set! tails (append tails (list (rope-tail r)))))
+           tails)))))))
 
 (define (solve-part-2 filename)
-  (println (format "hello ~a" filename)))
+  (let ([contents (parse-file filename)]
+        [c (make-chain 9 5 12)])
+    (length
+     (remove-duplicates
+      (flatten
+       (for/list ([instruction contents])
+         (let ([tails '()])
+           (for ([i (cdr instruction)])
+             (set! c (apply-motion-to-chain c (car instruction)))
+             (set! tails (append tails (list (last c)))))
+           tails)))))))
 
 (module+ test
   (require rackunit)
 
   (define sample "./sample.txt")
+  (define sample2 "./sample2.txt")
 
   (check-equal? (solve-part-1 sample) 13)
-  ;; (check-equal? (solve-part-2 sample))
+  (check-equal? (solve-part-2 sample) 0)
+  (check-equal? (solve-part-2 sample2) 36)
   )
 
 (module+ main
