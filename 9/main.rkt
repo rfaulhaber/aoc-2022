@@ -29,7 +29,7 @@
 
 (define (solve-part-2 filename)
   (let ([contents (parse-file filename)]
-        [c (make-chain 9 5 12)])
+        [c (make-chain 10)])
     (length
      (remove-duplicates
       (flatten

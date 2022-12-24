@@ -16,17 +16,20 @@
     [(null? c) '()]
     [(= (length c) 2) (apply-motion-to-head-tail (first c) (second c) direction)]
     [else
-     (let ([new-head (apply-motion (car c) direction)]
-           [first-tail (car (cdr c))])
-       (if (is-adjacent? new-head first-tail)
-           (append (list new-head) (cdr c))
-           (append (list new-head) (apply-motion-to-chain (cdr c) direction))))]))
+     (let ([new-head (apply-motion (car c) direction)])
+       (append (list new-head) (apply-motion-to-chain-tail (cdr c) (car c) new-head)))]))
+
+(define (apply-motion-to-chain-tail c prev-head new-head)
+  (cond
+    [(null? c) '()]
+    [(is-adjacent? new-head (car c)) c]
+    (else (append (list prev-head) (apply-motion-to-chain-tail (cdr c) (car c) prev-head)))))
 
 (define (apply-motion-to-head-tail head tail direction)
   (let ([new-head (apply-motion head direction)])
     (if (is-adjacent? new-head tail)
         (list new-head tail)
-        (list new-head (apply-motion tail direction)))))
+        (list new-head head))))
 
 (define (make-chain len (initial-x 0) (initial-y 0))
   (for/list ([i len])
